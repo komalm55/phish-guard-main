@@ -100,14 +100,6 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
-    proxy: {
-      '/proxy/vt': { target: 'https://www.virustotal.com', changeOrigin: true, rewrite: p => p.replace(/^\/proxy\/vt/, '') },
-      '/proxy/gsb': { target: 'https://safebrowsing.googleapis.com', changeOrigin: true, rewrite: p => p.replace(/^\/proxy\/gsb/, '') },
-      '/proxy/phishtank': { target: 'https://checkurl.phishtank.com', changeOrigin: true, rewrite: p => p.replace(/^\/proxy\/phishtank/, '') },
-      '/proxy/ipqs': { target: 'https://www.ipqualityscore.com', changeOrigin: true, rewrite: p => p.replace(/^\/proxy\/ipqs/, '') },
-      '/proxy/cloudmersive': { target: 'https://api.cloudmersive.com', changeOrigin: true, rewrite: p => p.replace(/^\/proxy\/cloudmersive/, '') },
-      '/proxy/urlhaus': { target: 'https://urlhaus-api.abuse.ch', changeOrigin: true, rewrite: p => p.replace(/^\/proxy\/urlhaus/, '') },
-    }
   },
   plugins: [
     whoisPlugin(),

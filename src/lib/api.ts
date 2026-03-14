@@ -530,186 +530,44 @@ export async function performLocalDetection(content: string, type: string): Prom
 }
 
 export async function detectPhishing(content: string, type: 'auto' | 'url' | 'email' | 'sms' = 'auto'): Promise<DetectionResult> {
-  const VIRUSTOTAL_API_KEY = import.meta.env.VITE_VIRUSTOTAL_KEY || "";
-  const GOOGLE_SAFE_BROWSING_API_KEY = import.meta.env.VITE_GOOGLE_SAFE_BROWSING_KEY || "";
-  const PHISHTANK_API_KEY = import.meta.env.VITE_PHISHTANK_KEY || "";
-  const IPQUALITYSCORE_API_KEY = import.meta.env.VITE_IPQUALITYSCORE_KEY || "";
-  const CLOUDMERSIVE_API_KEY = import.meta.env.VITE_CLOUDMERSIVE_KEY || "";
-  const URLHAUS_API_KEY = import.meta.env.VITE_URLHAUS_KEY || "";
-
-  const IS_DEV = import.meta.env.DEV;
-  const VT_BASE = IS_DEV ? '/proxy/vt' : 'https://www.virustotal.com';
-  const GSB_BASE = IS_DEV ? '/proxy/gsb' : 'https://safebrowsing.googleapis.com';
-  const PHISHTANK_BASE = IS_DEV ? '/proxy/phishtank' : 'https://checkurl.phishtank.com';
-  const IPQS_BASE = IS_DEV ? '/proxy/ipqs' : 'https://www.ipqualityscore.com';
-  const CLOUDMERSIVE_BASE = IS_DEV ? '/proxy/cloudmersive' : 'https://api.cloudmersive.com';
-  const URLHAUS_BASE = IS_DEV ? '/proxy/urlhaus' : 'https://urlhaus-api.abuse.ch';
-
   const indicators: { name: string; severity: 'low' | 'medium' | 'high'; description: string }[] = [];
   let score = 0;
 
-  // Extract URLs for API checks - strict boundary to prevent matching sentences without space after period
+  // Extract URLs from content for the Cloud Function
   const urlRegex = /(?:https?:\/\/)[^\s]+|(?:www\.)[^\s]+|\b[a-zA-Z0-9.-]+\.(?:com|org|net|io|co|us|uk|gov|edu|info|biz|me|tv|shop|app|xyz|in|ac|ca|au|de)\b/gi;
   const urlMatches = content.match(urlRegex) || [];
   const urls = [...new Set(urlMatches)];
 
-  const threat_audit: { scan_time: string; sources: Record<string, unknown> } = {
-    scan_time: new Date().toISOString(),
-    sources: {}
-  };
+  let threat_audit: { scan_time: string; sources: Record<string, unknown> } | undefined;
 
-  for (const url of urls) {
-    const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
+  // Call Vercel serverless function for third-party API checks (keys stay server-side)
+  if (urls.length > 0) {
+    try {
+      const response = await fetch('/api/detect-phishing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls }),
+      });
 
-    // 1. VirusTotal
-    if (VIRUSTOTAL_API_KEY) {
-      try {
-        const encodedId = btoa(unescape(encodeURIComponent(cleanUrl))).replace(/=/g, "");
-        const res = await fetch(`${VT_BASE}/api/v3/urls/${encodedId}`, {
-          method: 'GET',
-          headers: { 'x-apikey': VIRUSTOTAL_API_KEY, 'Accept': 'application/json' }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const stats = data.data?.attributes?.last_analysis_stats;
-          if (stats) {
-            threat_audit.sources.virustotal = { 
-              scanned: true, malicious: stats.malicious, suspicious: stats.suspicious, 
-              verdict: stats.malicious > 0 ? 'malicious' : stats.suspicious > 0 ? 'suspicious' : 'clean' 
-            };
-            if (stats.malicious > 0) {
-              indicators.push({ name: 'VirusTotal Flag', severity: 'high', description: `Flagged malicious by ${stats.malicious} security vendors on VT` });
-              score += 60;
-            }
-          }
-        }
-      } catch (e) {
-        if (e instanceof Error) console.warn("VT Error:", e.message);
-      }
-    }
-
-    // 2. Google Safe Browsing
-    if (GOOGLE_SAFE_BROWSING_API_KEY) {
-      try {
-        const payload = {
-          client: { clientId: "phishguard", clientVersion: "1.0.0" },
-          threatInfo: {
-            threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE"],
-            platformTypes: ["ANY_PLATFORM"],
-            threatEntryTypes: ["URL"],
-            threatEntries: [{ url: cleanUrl }]
-          }
+      if (response.ok) {
+        const serverData = await response.json() as {
+          indicators: { name: string; severity: 'low' | 'medium' | 'high'; description: string }[];
+          threat_audit: { scan_time: string; sources: Record<string, unknown> } | null;
+          score: number;
         };
-        const res = await fetch(`${GSB_BASE}/v4/threatMatches:find?key=${GOOGLE_SAFE_BROWSING_API_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-          const data = await res.json() as { matches?: { threatType: string }[] };
-          const matches = data.matches || [];
-          threat_audit.sources.google_safe_browsing = {
-            scanned: true,
-            matches: matches.map((m) => m.threatType)
-          };
-          if (matches.length > 0) {
-            indicators.push({ name: 'Google Safe Browsing', severity: 'high', description: `Flagged as ${matches[0].threatType}` });
-            score += 100;
-          }
-        }
-      } catch (e) {
-        if (e instanceof Error) console.warn("GSB Error:", e.message);
-      }
-    }
 
-    // 3. PhishTank
-    if (PHISHTANK_API_KEY) {
-      try {
-        const res = await fetch(`${PHISHTANK_BASE}/checkurl/`, {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-           body: new URLSearchParams({ url: cleanUrl, format: 'json', app_key: PHISHTANK_API_KEY })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const valid = data?.results?.valid;
-          threat_audit.sources.phishtank = { scanned: true, found: data?.results?.in_database, verified: valid };
-          if (valid) {
-            indicators.push({ name: 'PhishTank', severity: 'high', description: 'Verified phishing URL in community database.' });
-            score += 80;
-          }
+        indicators.push(...serverData.indicators);
+        score += serverData.score;
+        if (serverData.threat_audit) {
+          threat_audit = serverData.threat_audit;
         }
-      } catch (e) {
-        if (e instanceof Error) console.warn("PhishTank Error:", e.message);
       }
-    }
-
-    // 4. IPQualityScore
-    if (IPQUALITYSCORE_API_KEY) {
-      try {
-        const encodedUrl = encodeURIComponent(cleanUrl);
-        const res = await fetch(`${IPQS_BASE}/api/json/url/${IPQUALITYSCORE_API_KEY}/${encodedUrl}`);
-        if (res.ok) {
-          const data = await res.json();
-          // IPQS can be very sensitive to keywords. Require a high score before flagging heavily.
-          if (data.success && data.unsafe && data.risk_score > 75) {
-            const isHighRisk = data.risk_score > 90; // Raised threshold for 'high' severity
-            indicators.push({ 
-              name: 'IPQualityScore', 
-              severity: isHighRisk ? 'high' : 'medium', 
-              description: `IPQS Flagged suspicious (Risk Score: ${data.risk_score})` 
-            });
-            score += isHighRisk ? 40 : 20;
-          }
-        }
-      } catch (e) {
-        if (e instanceof Error) console.warn("IPQS Error:", e.message); 
-      }
-    }
-
-    // 5. Cloudmersive
-    if (CLOUDMERSIVE_API_KEY) {
-      try {
-        const res = await fetch(`${CLOUDMERSIVE_BASE}/virus/scan/website`, {
-          method: 'POST',
-          headers: { 'Apikey': CLOUDMERSIVE_API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ Url: cleanUrl })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.CleanResult === false) {
-             indicators.push({ name: 'Cloudmersive', severity: 'high', description: 'Website scanned as malicious/virus.' });
-             score += 60;
-          }
-        }
-      } catch (e) { 
-        if (e instanceof Error) console.warn("Cloudmersive Error:", e.message); 
-      }
-    }
-
-    // 6. URLhaus
-    if (URLHAUS_API_KEY) {
-       try {
-         const payload = new URLSearchParams({ url: cleanUrl });
-         const res = await fetch(`${URLHAUS_BASE}/v1/url/`, {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-           body: payload
-         });
-         if (res.ok) {
-           const data = await res.json();
-           if (data?.query_status === 'ok') {
-             indicators.push({ name: 'URLhaus', severity: 'high', description: `URL is tracked as malware distribution site by URLhaus.` });
-             score += 80;
-           }
-         }
-       } catch (e) {
-         if (e instanceof Error) console.warn("URLhaus Error:", e.message);
-       }
+    } catch (e) {
+      console.warn('Cloud Function detectPhishing call failed (falling back to local only):', e);
     }
   }
 
-  // Combine with Local Heuristics
+  // Combine with Local Heuristics (still runs client-side — no API keys needed)
   const localResult = await performLocalDetection(content, type);
   
   const mergedIndicators = [...indicators, ...localResult.details.indicators];
@@ -723,7 +581,7 @@ export async function detectPhishing(content: string, type: 'auto' | 'url' | 'em
     input_type: type || 'auto',
     top_reasons: mergedIndicators.slice(0, 5).map(i => i.description),
     forensics: localResult.forensics,
-    threat_audit: Object.keys(threat_audit.sources).length > 0 ? threat_audit : undefined,
+    threat_audit: threat_audit || undefined,
     details: {
       indicators: mergedIndicators,
       analysis_summary: finalLabel === 'phishing' ? 'High risk determined by API integrations and heuristics.' :
