@@ -215,7 +215,7 @@ export default function About() {
             <h2 className="text-2xl md:text-3xl font-bold mb-2">Algorithms & Models</h2>
             <p className="text-muted-foreground">The intelligence behind the detection</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {algorithms.map((algo, index) => (
               <motion.div
                 key={algo.name}
@@ -248,7 +248,7 @@ export default function About() {
             <h2 className="text-2xl md:text-3xl font-bold mb-2">Technology Stack</h2>
             <p className="text-muted-foreground">Built with modern, production-ready technologies</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {techStack.map((stack, index) => (
               <motion.div
                 key={stack.category}
@@ -285,7 +285,7 @@ export default function About() {
             <h2 className="text-2xl md:text-3xl font-bold mb-2">How It Works</h2>
             <p className="text-muted-foreground">Multi-layered detection pipeline</p>
           </div>
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {[
               { step: "1", title: "Input", description: "Paste a URL, email, or SMS — or scan a QR code, screenshot, or PDF document." },
               { step: "2", title: "ML Analysis", description: "Our 16-feature logistic regression model extracts NLP features and calculates phishing probability." },

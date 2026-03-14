@@ -12,7 +12,7 @@ export function RiskMeter({ percentage, label, size = 'lg', showLabel = true }: 
   const sizeClasses = {
     sm: 'w-24 h-24',
     md: 'w-36 h-36',
-    lg: 'w-48 h-48'
+    lg: 'w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48'
   };
 
   const textSizes = {

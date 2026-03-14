@@ -178,7 +178,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-sm overflow-y-auto"
         onClick={onClose}
       >
         <motion.div
@@ -186,13 +186,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md bg-card border border-border rounded-2xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden"
+          className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-card border border-border rounded-2xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]"
         >
-          {/* Invisible Recaptcha Container */}
-          <div id="recaptcha-container"></div>
+          {/* Invisible Recaptcha Container — hidden from view */}
+          <div id="recaptcha-container" className="hidden"></div>
 
           {/* Header */}
-          <div className="relative p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border-b border-border">
+          <div className="relative p-4 sm:p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border-b border-border">
             <button
               onClick={handleClose}
               className="absolute top-4 right-4 p-1 rounded-full hover:bg-secondary/50 transition-colors"
@@ -208,7 +208,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-5">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
             {/* Quick Actions (Google & Guest) */}
             <div className="grid grid-cols-2 gap-3">
               <Button

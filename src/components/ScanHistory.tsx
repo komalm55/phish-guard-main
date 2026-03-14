@@ -166,7 +166,7 @@ export function ScanHistory({ onRescan, refreshTrigger }: ScanHistoryProps) {
           )}
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
           {(['all', 'safe', 'suspicious', 'phishing'] as const).map((f) => (
             <Button
               key={f}
@@ -211,7 +211,7 @@ export function ScanHistory({ onRescan, refreshTrigger }: ScanHistoryProps) {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
                       <Badge variant="outline" className={cn("text-xs", getStatusBadge(item.result.label))}>
                         {item.result.label}
                       </Badge>

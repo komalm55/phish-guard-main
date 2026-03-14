@@ -161,13 +161,13 @@ export function ScanResult({ result, onNewScan }: ScanResultProps) {
       className="w-full max-w-3xl mx-auto space-y-6"
     >
       {/* Main Result Card */}
-      <Card className={cn("relative overflow-hidden p-8 border-2 transition-all duration-500", getStatusColor())}>
+      <Card className={cn("relative overflow-hidden p-5 sm:p-8 border-2 transition-all duration-500", getStatusColor())}>
         <div className={cn("absolute inset-0 opacity-20 bg-gradient-to-br transition-all duration-500",
           result.label === 'safe' ? "from-safe/20 to-transparent" :
           result.label === 'suspicious' ? "from-warning/20 to-transparent" :
           "from-danger/20 to-transparent"
         )} />
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+        <div className="relative z-10 flex flex-col items-center gap-6 sm:gap-8 md:flex-row">
           {/* Risk Meter */}
           <div className="flex-shrink-0">
             <RiskMeter
@@ -268,7 +268,7 @@ export function ScanResult({ result, onNewScan }: ScanResultProps) {
 
                 {/* Threat Intelligence Audit */}
                 {result.threat_audit && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                     {/* VirusTotal */}
                     <div className={cn("p-4 rounded-lg border",
                       !result.threat_audit.sources.virustotal?.scanned ? "bg-muted/30 border-muted" :
@@ -374,7 +374,7 @@ export function ScanResult({ result, onNewScan }: ScanResultProps) {
 
                 {/* Original Forensics Content */}
                 {result.forensics && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-4 border-t border-border/50">
                     {/* Domain Age */}
                     <div className="p-4 bg-secondary/10 border border-border rounded-lg">
                       <div className="flex items-center gap-2 mb-3">

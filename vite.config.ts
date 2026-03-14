@@ -116,15 +116,53 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
       },
       manifest: {
-        name: 'PhishGuard - Advanced Phishing Detection',
+        name: 'PhishGuard - AI Phishing Detection',
         short_name: 'PhishGuard',
-        description: 'Real-time phishing detection and URL analysis tool.',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        description: 'AI-powered phishing detection for URLs, emails, SMS, QR codes, and screenshots.',
+        theme_color: '#0a1120',
+        background_color: '#0a1120',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        id: '/',
+        lang: 'en',
+        dir: 'ltr' as any,
+        categories: ['security', 'utilities'],
+        prefer_related_applications: false,
+        display_override: ['standalone', 'window-controls-overlay'] as any,
+        shortcuts: [
+          {
+            name: 'Scan URL',
+            short_name: 'Scan',
+            description: 'Open the phishing scanner',
+            url: '/',
+            icons: [{ src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' }]
+          },
+          {
+            name: 'About PhishGuard',
+            short_name: 'About',
+            description: 'Learn about PhishGuard',
+            url: '/about',
+            icons: [{ src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' }]
+          }
+        ] as any,
+        screenshots: [
+          {
+            src: 'screenshot-desktop.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'PhishGuard Desktop - AI Phishing Scanner'
+          },
+          {
+            src: 'screenshot-mobile.png',
+            sizes: '750x1334',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'PhishGuard Mobile - Scan URLs on the go'
+          }
+        ] as any,
         icons: [
           {
             src: 'favicon.ico',
@@ -132,10 +170,22 @@ export default defineConfig(({ mode }) => ({
             type: 'image/x-icon'
           },
           {
-            src: 'placeholder.svg',
+            src: 'pwa-512x512.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }
